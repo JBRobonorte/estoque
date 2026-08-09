@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestão de Estoque</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+  <div class="flex h-screen overflow-hidden">
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between p-4 shadow-lg">
+      <div>
+        <div class="flex items-center gap-3 px-2 py-4 border-b border-slate-700">
+          <i class="fa-solid fa-boxes-stacked text-indigo-400 text-2xl"></i>
+          <h1 class="font-bold text-xl tracking-wide">StockMaster</h1>
+        </div>
+        <nav class="mt-6 space-y-1">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-600 text-white transition">
+            <i class="fa-solid fa-chart-line w-5"></i> Dashboard
+          </button>
+          <button onclick="switchTab('products')" id="nav-products" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition">
+            <i class="fa-solid fa-box w-5"></i> Produtos
+          </button>
+        </nav>
+      </div>
+      <div class="border-t border-slate-800 pt-4 text-xs text-slate-400 text-center">
+        Sistema de Controle de Estoque
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto p-8">
+      
+      <!-- DASHBOARD TAB -->
+      <section id="tab-dashboard" class="space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">Visão Geral do Estoque</h2>
+          <p class="text-sm text-gray-500">Métricas e status em tempo real.</p>
+        </div>
+
+        <!-- METRIC CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase">Total de Itens</p>
+              <h3 id="stat-total-items" class="text-2xl font-bold text-gray-800 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-boxes-packing text-xl"></i></div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase">Qtd Total em Estoque</p>
+              <h3 id="stat-total-qty" class="text-2xl font-bold text-gray-800 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-layer-group text-xl"></i></div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase">Valor do Estoque</p>
+              <h3 id="stat-total-value" class="text-2xl font-bold text-emerald-600 mt-1">R$ 0,00</h3>
+            </div>
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
+          </div>
+          <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase">Estoque Baixo</p>
+              <h3 id="stat-low-stock" class="text-2xl font-bold text-amber-500 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-amber-50 text-amber-500 rounded-lg"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
+          </div>
+        </div>
+
+        <!-- LOW STOCK ALERT TABLE -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-bell text-amber-500"></i> Alertas de Estoque Mínimo
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="border-b border-gray-200 bg-gray-50 text-gray-600 uppercase text-xs">
+                  <th class="p-3">SKU</th>
+                  <th class="p-3">Produto</th>
+                  <th class="p-3">Categoria</th>
+                  <th class="p-3">Atual</th>
+                  <th class="p-3">Mínimo</th>
+                  <th class="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody id="low-stock-table-body">
+                <!-- Preenchido dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRODUCTS TAB -->
+      <section id="tab-products" class="space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">Gerenciamento de Produtos</h2>
+            <p class="text-sm text-gray-500">Cadastre, edite e acompanhe seus componentes.</p>
+          </div>
+          <button onclick="openModal('add')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition">
+            <i class="fa-solid fa-plus"></i> Novo Produto
+          </button>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4">
+          <div class="flex-1 relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+            <input type="text" id="search-input" oninput="renderProducts()" placeholder="Buscar por nome ou SKU..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+          <select id="filter-category" onchange="renderProducts()" class="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 bg-white">
+            <option value="">Todas as Categorias</option>
+          </select>
+        </div>
+
+        <!-- TABLE -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="border-b border-gray-200 bg-gray-50 text-gray-600 uppercase text-xs">
+                  <th class="p-3">SKU</th>
+                  <th class="p-3">Nome</th>
+                  <th class="p-3">Categoria</th>
+                  <th class="p-3">Qtd</th>
+                  <th class="p-3">Preço Custo</th>
+                  <th class="p-3">Localização</th>
+                  <th class="p-3 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="products-table-body">
+                <!-- Preenchido via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL ADICIONAR / EDITAR -->
+  <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative">
+      <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">Adicionar Produto</h3>
+      <form id="product-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+        <input type="hidden" id="form-sku-original">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">SKU / ID</label>
+            <input type="text" id="form-sku" required class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Categoria</label>
+            <input type="text" id="form-category" required class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Nome do Produto</label>
+          <input type="text" id="form-name" required class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Quantidade</label>
+            <input type="number" id="form-qty" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Qtd Mínima</label>
+            <input type="number" id="form-min" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Preço Custo (R$)</label>
+            <input type="number" id="form-cost" step="0.01" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Localização no Estoque</label>
+          <input type="text" id="form-location" placeholder="Ex: Gaveta 1" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // LISTA COM 31 ITENS EXTRAÍDOS DA TABELA DE PREÇOS E DO ORÇAMENTO
+    const SEED_PRODUCTS = [
+      { sku: "106", name: "Potenciômetro 10k", category: "Resistores", qty: 20, min: 5, cost: 1.79, location: "Gaveta 1" },
+      { sku: "165", name: "LCD 16x2 5V Branco no Azul", category: "Displays", qty: 8, min: 2, cost: 14.90, location: "Gaveta 3" },
+      { sku: "501", name: "Relé Metaltex Bobina 5V", category: "Módulos", qty: 10, min: 2, cost: 5.50, location: "Gaveta 5" },
+      { sku: "502", name: "Sensor de Presença PIR HC-SR501", category: "Sensores", qty: 5, min: 2, cost: 8.79, location: "Gaveta 2" },
+      { sku: "507", name: "Sensor de Som", category: "Sensores", qty: 2, min: 1, cost: 17.90, location: "Gaveta 2" },
+      { sku: "508", name: "Sensor de Refletância", category: "Sensores", qty: 6, min: 2, cost: 9.00, location: "Gaveta 2" },
+      { sku: "620", name: "Sensor Ultrassônico - HC-SR04", category: "Sensores", qty: 15, min: 3, cost: 9.49, location: "Gaveta 2" },
+      { sku: "621", name: "Sensor DHT22 Temperatura e Umidade", category: "Sensores", qty: 4, min: 2, cost: 17.55, location: "Gaveta 2" },
+      { sku: "676", name: "Motor DC 3-6V com Caixa de Redução", category: "Motores", qty: 10, min: 3, cost: 7.97, location: "Caixa M1" },
+      { sku: "788", name: "Micro Servo 9g SG90", category: "Servomotores", qty: 30, min: 5, cost: 13.79, location: "Gaveta 4" },
+      { sku: "791", name: "Sensor DHT11 de Temperatura e Umidade", category: "Sensores", qty: 5, min: 2, cost: 7.42, location: "Gaveta 2" },
+      { sku: "796", name: "Kit RFID MFRC522 (13,56MHz)", category: "Módulos", qty: 8, min: 2, cost: 13.62, location: "Gaveta 5" },
+      { sku: "797", name: "Sensor de Chuva", category: "Sensores", qty: 4, min: 2, cost: 5.55, location: "Gaveta 2" },
+      { sku: "798", name: "Sensor de Obstáculo", category: "Sensores", qty: 8, min: 2, cost: 4.54, location: "Gaveta 2" },
+      { sku: "985", name: "Protoboard 400 Pontos", category: "Protoboards", qty: 25, min: 5, cost: 6.96, location: "Armário B" },
+      { sku: "1001", name: "ESP32 WiFi + Bluetooth", category: "Placas", qty: 5, min: 2, cost: 43.28, location: "Prateleira 1" },
+      { sku: "1002", name: "Módulo Bluetooth", category: "Módulos", qty: 4, min: 2, cost: 30.16, location: "Gaveta 5" },
+      { sku: "1048", name: "Placa Nano V3 + Cabo USB para Arduino", category: "Arduino", qty: 3, min: 2, cost: 29.15, location: "Prateleira 1" },
+      { sku: "1054", name: "Protoboard 830 Pontos", category: "Protoboards", qty: 25, min: 5, cost: 11.00, location: "Armário B" },
+      { sku: "1055", name: "Driver Ponte H L298N", category: "Módulos", qty: 6, min: 2, cost: 15.03, location: "Gaveta 5" },
+      { sku: "1081", name: "LED 5mm Vermelho (10 unidades)", category: "LEDs", qty: 5, min: 2, cost: 1.46, location: "Gaveta 1" },
+      { sku: "1082", name: "LED 5mm Amarelo (10 unidades)", category: "LEDs", qty: 5, min: 2, cost: 1.46, location: "Gaveta 1" },
+      { sku: "1083", name: "LED 5mm Verde (10 unidades)", category: "LEDs", qty: 5, min: 2, cost: 1.46, location: "Gaveta 1" },
+      { sku: "1094", name: "Chave Momentânea (PushButton) - Pacote 10 un.", category: "Outros", qty: 2, min: 2, cost: 1.51, location: "Gaveta 1" },
+      { sku: "1101", name: "Resistor 10k - Pacote com 10 unidades", category: "Resistores", qty: 15, min: 5, cost: 0.76, location: "Gaveta 1" },
+      { sku: "1115", "name": "Servo TowerPro MG996R Metálico", category: "Servomotores", qty: 10, min: 3, cost: 55.48, location: "Gaveta 4" },
+      { sku: "1116", name: "LED RGB (Pacote com 5 unidades)", category: "LEDs", qty: 4, min: 2, cost: 3.70, location: "Gaveta 1" },
+      { sku: "1093", name: "Sensor de Luminosidade LDR 10mm", category: "Sensores", qty: 1, min: 2, cost: 4.94, location: "Gaveta 2" },
+      { sku: "1200", name: "LED 5mm Azul (10 unidades)", category: "LEDs", qty: 5, min: 2, cost: 1.92, location: "Gaveta 1" },
+      { sku: "1270", name: "Jumpers Macho-Macho x40 Unidades", category: "Cabos", qty: 3, min: 2, cost: 7.97, location: "Gaveta 6" },
+      { sku: "1271", name: "Jumpers Fêmea-Fêmea x40 Unidades", category: "Cabos", qty: 3, min: 2, cost: 6.96, location: "Gaveta 6" }
+    ];
+
+    let products = JSON.parse(localStorage.getItem('products_db')) || SEED_PRODUCTS;
+
+    function saveData() {
+      localStorage.setItem('products_db', JSON.stringify(products));
+      renderAll();
+    }
+
+    function switchTab(tab) {
+      document.getElementById('tab-dashboard').classList.toggle('hidden', tab !== 'dashboard');
+      document.getElementById('tab-products').classList.toggle('hidden', tab !== 'products');
+      
+      const btnDash = document.getElementById('nav-dashboard');
+      const btnProd = document.getElementById('nav-products');
+
+      if (tab === 'dashboard') {
+        btnDash.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-600 text-white transition";
+        btnProd.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition";
+      } else {
+        btnProd.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-600 text-white transition";
+        btnDash.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition";
+      }
+    }
+
+    function formatMoney(value) {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function renderDashboard() {
+      const totalItems = products.length;
+      const totalQty = products.reduce((acc, p) => acc + Number(p.qty), 0);
+      const totalValue = products.reduce((acc, p) => acc + (Number(p.qty) * Number(p.cost)), 0);
+      const lowStockItems = products.filter(p => Number(p.qty) <= Number(p.min));
+
+      document.getElementById('stat-total-items').textContent = totalItems;
+      document.getElementById('stat-total-qty').textContent = totalQty;
+      document.getElementById('stat-total-value').textContent = formatMoney(totalValue);
+      document.getElementById('stat-low-stock').textContent = lowStockItems.length;
+
+      const lowStockBody = document.getElementById('low-stock-table-body');
+      lowStockBody.innerHTML = '';
+
+      if (lowStockItems.length === 0) {
+        lowStockBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum produto com estoque crítico.</td></tr>`;
+        return;
+      }
+
+      lowStockItems.forEach(p => {
+        lowStockBody.innerHTML += `
+          <tr class="border-b border-gray-100 hover:bg-gray-50">
+            <td class="p-3 font-mono text-xs font-semibold">${p.sku}</td>
+            <td class="p-3 font-medium">${p.name}</td>
+            <td class="p-3 text-gray-500">${p.category}</td>
+            <td class="p-3 font-bold text-red-600">${p.qty}</td>
+            <td class="p-3 text-gray-500">${p.min}</td>
+            <td class="p-3">
+              <span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full font-medium">Repor Urgente</span>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderProducts() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      const selectedCategory = document.getElementById('filter-category').value;
+
+      const tbody = document.getElementById('products-table-body');
+      tbody.innerHTML = '';
+
+      const filtered = products.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm) || p.sku.toLowerCase().includes(searchTerm);
+        const matchesCategory = selectedCategory === "" || p.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      });
+
+      filtered.forEach(p => {
+        const isLow = Number(p.qty) <= Number(p.min);
+        tbody.innerHTML += `
+          <tr class="border-b border-gray-100 hover:bg-gray-50">
+            <td class="p-3 font-mono text-xs font-semibold text-gray-600">${p.sku}</td>
+            <td class="p-3 font-medium text-gray-800">${p.name}</td>
+            <td class="p-3 text-gray-500">${p.category}</td>
+            <td class="p-3">
+              <span class="${isLow ? 'text-red-600 font-bold' : 'text-gray-700'}">${p.qty}</span>
+              ${isLow ? '<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1" title="Abaixo do mínimo"></i>' : ''}
+            </td>
+            <td class="p-3 text-gray-700">${formatMoney(Number(p.cost))}</td>
+            <td class="p-3 text-gray-500">${p.location || '-'}</td>
+            <td class="p-3 text-center space-x-2">
+              <button onclick="openModal('edit', '${p.sku}')" class="text-indigo-600 hover:text-indigo-900"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteProduct('${p.sku}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+
+      updateCategoryOptions();
+    }
+
+    function updateCategoryOptions() {
+      const select = document.getElementById('filter-category');
+      const currentVal = select.value;
+      const categories = [...new Set(products.map(p => p.category))];
+      
+      select.innerHTML = '<option value="">Todas as Categorias</option>';
+      categories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}" ${cat === currentVal ? 'selected' : ''}>${cat}</option>`;
+      });
+    }
+
+    function openModal(mode, sku = null) {
+      const modal = document.getElementById('product-modal');
+      const title = document.getElementById('modal-title');
+      modal.classList.remove('hidden');
+
+      if (mode === 'add') {
+        title.textContent = "Adicionar Produto";
+        document.getElementById('product-form').reset();
+        document.getElementById('form-sku-original').value = "";
+      } else {
+        title.textContent = "Editar Produto";
+        const p = products.find(prod => prod.sku === sku);
+        if (!p) return;
+
+        document.getElementById('form-sku-original').value = p.sku;
+        document.getElementById('form-sku').value = p.sku;
+        document.getElementById('form-name').value = p.name;
+        document.getElementById('form-category').value = p.category;
+        document.getElementById('form-qty').value = p.qty;
+        document.getElementById('form-min').value = p.min;
+        document.getElementById('form-cost').value = p.cost;
+        document.getElementById('form-location').value = p.location || '';
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const origSku = document.getElementById('form-sku-original').value;
+      const sku = document.getElementById('form-sku').value;
+      
+      const newProduct = {
+        sku: sku,
+        name: document.getElementById('form-name').value,
+        category: document.getElementById('form-category').value,
+        qty: Number(document.getElementById('form-qty').value),
+        min: Number(document.getElementById('form-min').value),
+        cost: Number(document.getElementById('form-cost').value),
+        location: document.getElementById('form-location').value
+      };
+
+      if (origSku) {
+        const index = products.findIndex(p => p.sku === origSku);
+        if (index !== -1) products[index] = newProduct;
+      } else {
+        products.push(newProduct);
+      }
+
+      saveData();
+      closeModal();
+    }
+
+    function deleteProduct(sku) {
+      if (confirm(`Tem certeza que deseja excluir o produto SKU ${sku}?`)) {
+        products = products.filter(p => p.sku !== sku);
+        saveData();
+      }
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderProducts();
+    }
+
+    // Inicialização
+    renderAll();
+  </script>
+</body>
+</html>
