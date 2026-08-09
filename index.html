@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
-  <!-- TELA DE LOGIN INITIAL -->
+  <!-- TELA DE LOGIN INICIAL -->
   <div id="login-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
       <div class="text-center mb-6">
@@ -64,6 +64,9 @@
         </button>
         <button onclick="openImportModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded flex items-center justify-center gap-2">
           <i class="fa-solid fa-upload"></i> Importar Backup
+        </button>
+        <button onclick="resetToDefaultData()" class="w-full bg-amber-900/40 hover:bg-amber-900/70 text-amber-300 text-xs py-2 rounded flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-rotate-left"></i> Restaurar Produtos da Planilha
         </button>
         <button onclick="handleLogout()" class="w-full bg-red-900/40 hover:bg-red-900/70 text-red-300 text-xs py-2 rounded flex items-center justify-center gap-2 transition">
           <i class="fa-solid fa-right-from-bracket"></i> Sair do Sistema
@@ -204,7 +207,7 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Quantidade</label>
-            <input type="number" id="form-qty" required min="1" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
+            <input type="number" id="form-qty" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Qtd Mínima Alerta</label>
@@ -253,7 +256,53 @@
   </div>
 
   <script>
-    let products = JSON.parse(localStorage.getItem('robonorte_db')) || [];
+    // BASE DE DADOS COMPLETA EXTRAÍDA DA PLANILHA
+    const initialSheetProducts = [
+      {"id": "id_1", "sku": "SKU-1001", "name": "POTENCIOMETRO", "category": "Componentes", "qty": 10, "min": 3, "cost": 1.79, "wholesale": 3.9, "retail": 4.1, "location": "Estoque Geral"},
+      {"id": "id_2", "sku": "SKU-1002", "name": "LCD 16X25 5V BRANC AZUL", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 14.9, "wholesale": 23.65, "retail": 24.98, "location": "Estoque Geral"},
+      {"id": "id_3", "sku": "SKU-1003", "name": "RELE METALTEX BOBINA 5V", "category": "Componentes", "qty": 10, "min": 3, "cost": 5.5, "wholesale": 9.9, "retail": 11.0, "location": "Estoque Geral"},
+      {"id": "id_4", "sku": "SKU-1004", "name": "SENS DE PRESEN PIR HC-SR501", "category": "Sensores", "qty": 10, "min": 3, "cost": 8.79, "wholesale": 14.9, "retail": 15.98, "location": "Estoque Geral"},
+      {"id": "id_5", "sku": "SKU-1005", "name": "SENSOR DE SOM", "category": "Sensores", "qty": 10, "min": 3, "cost": 17.9, "wholesale": 25.0, "retail": 27.9, "location": "Estoque Geral"},
+      {"id": "id_6", "sku": "SKU-1006", "name": "SENSOR DE REFLETANCIA", "category": "Sensores", "qty": 10, "min": 3, "cost": 9.0, "wholesale": 14.5, "retail": 15.98, "location": "Estoque Geral"},
+      {"id": "id_7", "sku": "SKU-1007", "name": "SENSOR ULTRASSONICO SR04", "category": "Sensores", "qty": 10, "min": 3, "cost": 9.49, "wholesale": 16.9, "retail": 18.89, "location": "Estoque Geral"},
+      {"id": "id_8", "sku": "SKU-1008", "name": "SENSOR DHT22 TEMP UMIDAD", "category": "Sensores", "qty": 10, "min": 3, "cost": 17.55, "wholesale": 26.0, "retail": 29.89, "location": "Estoque Geral"},
+      {"id": "id_9", "sku": "SKU-1009", "name": "MOTOR DC 3-6V", "category": "Atuadores & Motores", "qty": 10, "min": 3, "cost": 7.97, "wholesale": 14.9, "retail": 15.98, "location": "Estoque Geral"},
+      {"id": "id_10", "sku": "SKU-1010", "name": "MICRO SERVO 9G SG90", "category": "Atuadores & Motores", "qty": 10, "min": 3, "cost": 13.79, "wholesale": 17.6, "retail": 19.99, "location": "Estoque Geral"},
+      {"id": "id_11", "sku": "SKU-1011", "name": "SENSOR DHT11 TEMP UMID", "category": "Sensores", "qty": 10, "min": 3, "cost": 7.42, "wholesale": 12.0, "retail": 13.9, "location": "Estoque Geral"},
+      {"id": "id_12", "sku": "SKU-1012", "name": "KIT RFID MFRC 522", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 13.62, "wholesale": 18.0, "retail": 21.89, "location": "Estoque Geral"},
+      {"id": "id_13", "sku": "SKU-1013", "name": "SENSOR DE CHUVA", "category": "Sensores", "qty": 10, "min": 3, "cost": 5.55, "wholesale": 9.9, "retail": 11.25, "location": "Estoque Geral"},
+      {"id": "id_14", "sku": "SKU-1014", "name": "SENSOR DE OBSTACULO", "category": "Sensores", "qty": 10, "min": 3, "cost": 4.54, "wholesale": 7.9, "retail": 8.79, "location": "Estoque Geral"},
+      {"id": "id_15", "sku": "SKU-1015", "name": "PROTOBOARD 400", "category": "Acessórios & Prototipagem", "qty": 10, "min": 3, "cost": 6.96, "wholesale": 11.0, "retail": 12.98, "location": "Estoque Geral"},
+      {"id": "id_16", "sku": "SKU-1016", "name": "ESP 32+WIFI+BLUET", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 43.28, "wholesale": 60.0, "retail": 64.98, "location": "Estoque Geral"},
+      {"id": "id_17", "sku": "SKU-1017", "name": "MODULO BLUETOOTH", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 30.16, "wholesale": 44.5, "retail": 46.2, "location": "Estoque Geral"},
+      {"id": "id_18", "sku": "SKU-1018", "name": "ARDUINO NANO V3", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 29.15, "wholesale": 41.0, "retail": 46.2, "location": "Estoque Geral"},
+      {"id": "id_19", "sku": "SKU-1019", "name": "PROTOBOARD 830", "category": "Acessórios & Prototipagem", "qty": 10, "min": 3, "cost": 11.0, "wholesale": 15.89, "retail": 17.98, "location": "Estoque Geral"},
+      {"id": "id_20", "sku": "SKU-1020", "name": "DRIVER PONTE H L298N", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 15.03, "wholesale": 21.89, "retail": 24.98, "location": "Estoque Geral"},
+      {"id": "id_21", "sku": "SKU-1021", "name": "LED VERM PACOTE 10", "category": "Componentes", "qty": 10, "min": 3, "cost": 1.46, "wholesale": 2.89, "retail": 3.98, "location": "Estoque Geral"},
+      {"id": "id_22", "sku": "SKU-1022", "name": "LED AMARELO PACOTE 10", "category": "Componentes", "qty": 10, "min": 3, "cost": 1.46, "wholesale": 2.89, "retail": 3.98, "location": "Estoque Geral"},
+      {"id": "id_23", "sku": "SKU-1023", "name": "LED VERDE PACOTE 10", "category": "Componentes", "qty": 10, "min": 3, "cost": 1.46, "wholesale": 2.89, "retail": 3.98, "location": "Estoque Geral"},
+      {"id": "id_24", "sku": "SKU-1024", "name": "PUSH BUTTON PACOT 10", "category": "Componentes", "qty": 10, "min": 3, "cost": 1.51, "wholesale": 4.0, "retail": 4.95, "location": "Estoque Geral"},
+      {"id": "id_25", "sku": "SKU-1025", "name": "RESISTOR 10K PACOTE 10", "category": "Componentes", "qty": 10, "min": 3, "cost": 0.76, "wholesale": 2.5, "retail": 2.75, "location": "Estoque Geral"},
+      {"id": "id_26", "sku": "SKU-1026", "name": "SERVO TOWER PRO MG996R", "category": "Atuadores & Motores", "qty": 10, "min": 3, "cost": 55.48, "wholesale": 75.89, "retail": 79.98, "location": "Estoque Geral"},
+      {"id": "id_27", "sku": "SKU-1027", "name": "LED RGB PACOTED 5", "category": "Componentes", "qty": 10, "min": 3, "cost": 3.7, "wholesale": 6.55, "retail": 6.9, "location": "Estoque Geral"},
+      {"id": "id_28", "sku": "SKU-1028", "name": "SENSOR DE LUMIN LDR 10 MM", "category": "Sensores", "qty": 10, "min": 3, "cost": 4.94, "wholesale": 9.0, "retail": 9.98, "location": "Estoque Geral"},
+      {"id": "id_29", "sku": "SKU-1029", "name": "LED AZUL PACOTE 10", "category": "Componentes", "qty": 10, "min": 3, "cost": 1.92, "wholesale": 4.5, "retail": 4.9, "location": "Estoque Geral"},
+      {"id": "id_30", "sku": "SKU-1030", "name": "JUMP MACH+MACH 40 CAB", "category": "Acessórios & Prototipagem", "qty": 10, "min": 3, "cost": 7.97, "wholesale": 13.0, "retail": 15.98, "location": "Estoque Geral"},
+      {"id": "id_31", "sku": "SKU-1031", "name": "JUMP FEME+FEM 40 cab", "category": "Acessórios & Prototipagem", "qty": 10, "min": 3, "cost": 6.96, "wholesale": 12.9, "retail": 14.5, "location": "Estoque Geral"},
+      {"id": "id_32", "sku": "SKU-1032", "name": "BLACK BOARD UNOR3", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 99.77, "wholesale": 145.89, "retail": 149.98, "location": "Estoque Geral"},
+      {"id": "id_33", "sku": "SKU-1033", "name": "CAIXA ORGAN ROBOC", "category": "Eletrônicos", "qty": 10, "min": 3, "cost": 30.16, "wholesale": 41.0, "retail": 44.0, "location": "Estoque Geral"},
+      {"id": "id_34", "sku": "SKU-1034", "name": "MODULO BUZZER ATIV 5V", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 5.95, "wholesale": 8.89, "retail": 9.95, "location": "Estoque Geral"},
+      {"id": "id_35", "sku": "SKU-1035", "name": "DISPLAY OLED", "category": "Placas & Módulos", "qty": 10, "min": 3, "cost": 23.1, "wholesale": 32.5, "retail": 34.9, "location": "Estoque Geral"},
+      {"id": "id_36", "sku": "SKU-1036", "name": "CHAVE GANGORR KCD1-101", "category": "Componentes", "qty": 10, "min": 3, "cost": 1.51, "wholesale": 3.4, "retail": 3.98, "location": "Estoque Geral"}
+    ];
+
+    let products = JSON.parse(localStorage.getItem('robonorte_db'));
+    
+    // Se não houver produtos gravados no localStorage, carrega os 36 da planilha
+    if (!products || products.length === 0) {
+      products = [...initialSheetProducts];
+      localStorage.setItem('robonorte_db', JSON.stringify(products));
+    }
 
     // LOGIN
     function handleLogin(e) {
@@ -276,10 +325,17 @@
       document.getElementById('login-pass').value = '';
     }
 
-    // PERSISTÊNCIA
+    // PERSISTÊNCIA & AÇÕES
     function saveData() {
       localStorage.setItem('robonorte_db', JSON.stringify(products));
       renderAll();
+    }
+
+    function resetToDefaultData() {
+      if (confirm('Tem certeza que deseja restaurar os 36 produtos originais da planilha? Todas as alterações manuais serão sobrescritas.')) {
+        products = [...initialSheetProducts];
+        saveData();
+      }
     }
 
     function exportData() {
