@@ -9,7 +9,38 @@
 </head>
 <body class="bg-gray-100 font-sans text-gray-800">
 
-  <div class="flex h-screen overflow-hidden">
+  <!-- TELA DE LOGIN INITIAL -->
+  <div id="login-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fa-solid fa-robot text-3xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800">JB Robonorte</h2>
+        <p class="text-xs text-gray-500 mt-1">Digite suas credenciais para acessar o painel</p>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Usuário</label>
+          <input type="text" id="login-user" value="admin" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Senha</label>
+          <input type="password" id="login-pass" placeholder="••••••••" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        
+        <p id="login-error" class="text-red-500 text-xs text-center hidden font-medium">Senha ou usuário incorretos!</p>
+
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm shadow-md transition">
+          Entrar no Sistema
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- APLICAÇÃO PRINCIPAL -->
+  <div id="app-screen" class="flex h-screen overflow-hidden hidden">
     <!-- SIDEBAR -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between p-4 shadow-lg">
       <div>
@@ -31,11 +62,11 @@
         <button onclick="exportData()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded flex items-center justify-center gap-2">
           <i class="fa-solid fa-download"></i> Baixar Backup (JSON)
         </button>
-        <button onclick="requestAuth(() => openImportModal())" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded flex items-center justify-center gap-2">
+        <button onclick="openImportModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 rounded flex items-center justify-center gap-2">
           <i class="fa-solid fa-upload"></i> Importar Backup
         </button>
-        <button onclick="requestAuth(() => openConfigModal())" class="w-full bg-indigo-900 hover:bg-indigo-800 text-indigo-200 text-xs py-2 rounded flex items-center justify-center gap-2">
-          <i class="fa-solid fa-key"></i> Alterar Senha
+        <button onclick="handleLogout()" class="w-full bg-red-900/40 hover:bg-red-900/70 text-red-300 text-xs py-2 rounded flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-right-from-bracket"></i> Sair do Sistema
         </button>
       </div>
     </aside>
@@ -53,14 +84,14 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
-              <p class="text-xs font-semibold text-gray-400 uppercase">Produtos do PDF (Itens)</p>
+              <p class="text-xs font-semibold text-gray-400 uppercase">Produtos no Catálogo</p>
               <h3 id="stat-total-items" class="text-2xl font-bold text-gray-800 mt-1">0</h3>
             </div>
             <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-boxes-packing text-xl"></i></div>
           </div>
           <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
-              <p class="text-xs font-semibold text-gray-400 uppercase">Qtd Total Unidades</p>
+              <p class="text-xs font-semibold text-gray-400 uppercase">Total de Unidades</p>
               <h3 id="stat-total-qty" class="text-2xl font-bold text-gray-800 mt-1">0</h3>
             </div>
             <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-layer-group text-xl"></i></div>
@@ -108,9 +139,9 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 class="text-2xl font-bold text-gray-800">Catálogo de Produtos</h2>
-            <p class="text-sm text-gray-500">Preços de Custo, Atacado e Varejo conforme sua nota.</p>
+            <p class="text-sm text-gray-500">Gerencie preços de Custo, Atacado e Varejo.</p>
           </div>
-          <button onclick="requestAuth(() => openModal('add'))" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition">
+          <button onclick="openModal('add')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition">
             <i class="fa-solid fa-plus"></i> Adicionar Produto
           </button>
         </div>
@@ -133,10 +164,10 @@
                   <th class="p-3">SKU</th>
                   <th class="p-3">Produto</th>
                   <th class="p-3">Categoria</th>
-                  <th class="p-3">Qtd Comprada</th>
-                  <th class="p-3">Preço Custo UN</th>
-                  <th class="p-3">Preço Atacado UN</th>
-                  <th class="p-3">Preço Varejo UN</th>
+                  <th class="p-3">Qtd</th>
+                  <th class="p-3">Custo UN</th>
+                  <th class="p-3">Atacado UN</th>
+                  <th class="p-3">Varejo UN</th>
                   <th class="p-3">Localização</th>
                   <th class="p-3 text-center">Ações</th>
                 </tr>
@@ -150,28 +181,7 @@
     </main>
   </div>
 
-  <!-- MODAL AUTENTICAÇÃO -->
-  <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative">
-      <div class="text-center mb-4">
-        <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2">
-          <i class="fa-solid fa-lock text-xl"></i>
-        </div>
-        <h3 class="text-lg font-bold text-gray-800">JB Robonorte</h3>
-        <p class="text-xs text-gray-500">Digite a senha para alterar (Padrão: 1234).</p>
-      </div>
-      <form onsubmit="confirmAuth(event)" class="space-y-4">
-        <input type="password" id="auth-password" placeholder="Digite a senha..." required class="w-full border border-gray-300 rounded-lg p-2.5 text-center text-lg tracking-widest focus:outline-none focus:border-indigo-500">
-        <p id="auth-error" class="text-red-500 text-xs text-center hidden">Senha incorreta!</p>
-        <div class="flex gap-2">
-          <button type="button" onclick="closeAuthModal()" class="w-1/2 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
-          <button type="submit" class="w-1/2 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">Acessar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL PRODUCT -->
+  <!-- MODAL CADASTRO / EDIÇÃO -->
   <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative">
       <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">Adicionar Produto</h3>
@@ -193,32 +203,32 @@
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Quantidade Adquirida</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Quantidade</label>
             <input type="number" id="form-qty" required min="1" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Qtd Mínima de Estoque</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Qtd Mínima Alerta</label>
             <input type="number" id="form-min" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
           </div>
         </div>
 
         <div class="grid grid-cols-3 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Preço Custo (UN)</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Preço Custo</label>
             <input type="number" id="form-cost" step="0.01" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Preço Atacado (UN)</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Preço Atacado</label>
             <input type="number" id="form-wholesale" step="0.01" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Preço Varejo (UN)</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Preço Varejo</label>
             <input type="number" id="form-retail" step="0.01" required min="0" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Localização</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Localização no Estoque</label>
           <input type="text" id="form-location" placeholder="Ex: Gaveta 1 / Caixa B" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500">
         </div>
 
@@ -230,23 +240,7 @@
     </div>
   </div>
 
-  <!-- MODALS AUXILIARES -->
-  <div id="config-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
-      <h3 class="text-lg font-bold text-gray-800 mb-4">Alterar Senha Master</h3>
-      <form onsubmit="changePassword(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Nova Senha</label>
-          <input type="password" id="new-password" required class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-        </div>
-        <div class="flex justify-end gap-2">
-          <button type="button" onclick="document.getElementById('config-modal').classList.add('hidden')" class="px-3 py-1.5 border rounded text-sm">Cancelar</button>
-          <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm">Salvar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
+  <!-- MODAL IMPORTAR BACKUP -->
   <div id="import-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
       <h3 class="text-lg font-bold text-gray-800 mb-4">Importar Backup (JSON)</h3>
@@ -260,47 +254,32 @@
 
   <script>
     let products = JSON.parse(localStorage.getItem('robonorte_db')) || [];
-    let masterPassword = localStorage.getItem('robonorte_password') || '1234';
-    let pendingAction = null;
 
-    function saveData() {
-      localStorage.setItem('robonorte_db', JSON.stringify(products));
-      renderAll();
-    }
-
-    function requestAuth(actionCallback) {
-      pendingAction = actionCallback;
-      document.getElementById('auth-error').classList.add('hidden');
-      document.getElementById('auth-password').value = '';
-      document.getElementById('auth-modal').classList.remove('hidden');
-      document.getElementById('auth-password').focus();
-    }
-
-    function closeAuthModal() {
-      document.getElementById('auth-modal').classList.add('hidden');
-      pendingAction = null;
-    }
-
-    function confirmAuth(e) {
+    // LOGIN
+    function handleLogin(e) {
       e.preventDefault();
-      if (document.getElementById('auth-password').value === masterPassword) {
-        closeAuthModal();
-        if (pendingAction) pendingAction();
+      const user = document.getElementById('login-user').value;
+      const pass = document.getElementById('login-pass').value;
+
+      if (pass === 'adm123') {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        renderAll();
       } else {
-        document.getElementById('auth-error').classList.remove('hidden');
+        document.getElementById('login-error').classList.remove('hidden');
       }
     }
 
-    function openConfigModal() {
-      document.getElementById('config-modal').classList.remove('hidden');
+    function handleLogout() {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('login-pass').value = '';
     }
 
-    function changePassword(e) {
-      e.preventDefault();
-      masterPassword = document.getElementById('new-password').value;
-      localStorage.setItem('robonorte_password', masterPassword);
-      alert('Senha alterada!');
-      document.getElementById('config-modal').classList.add('hidden');
+    // PERSISTÊNCIA
+    function saveData() {
+      localStorage.setItem('robonorte_db', JSON.stringify(products));
+      renderAll();
     }
 
     function exportData() {
@@ -319,32 +298,44 @@
 
     function processImport() {
       const fileInput = document.getElementById('import-file');
-      if (!fileInput.files.length) return alert('Selecione o arquivo .json');
+      if (!fileInput.files.length) return alert('Selecione um arquivo .json');
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
           products = JSON.parse(e.target.result);
           saveData();
-          alert('Dados importados com sucesso!');
+          alert('Banco de dados importado com sucesso!');
           document.getElementById('import-modal').classList.add('hidden');
         } catch (err) {
-          alert('Erro ao importar arquivo JSON.');
+          alert('Erro ao processar o arquivo JSON.');
         }
       };
       reader.readAsText(fileInput.files[0]);
     }
 
+    // INTERFACE DE ABAS
     function switchTab(tab) {
       document.getElementById('tab-dashboard').classList.toggle('hidden', tab !== 'dashboard');
       document.getElementById('tab-products').classList.toggle('hidden', tab !== 'products');
+
+      const btnDash = document.getElementById('nav-dashboard');
+      const btnProd = document.getElementById('nav-products');
+
+      if (tab === 'dashboard') {
+        btnDash.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-600 text-white transition";
+        btnProd.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition";
+      } else {
+        btnProd.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg bg-indigo-600 text-white transition";
+        btnDash.className = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition";
+      }
     }
 
     function formatMoney(value) {
       return (Number(value) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
+    // DASHBOARD & PRODUTOS
     function renderDashboard() {
-      // Cada entrada na lista = 1 produto único do PDF
       const totalUniqueProducts = products.length;
       const totalUnits = products.reduce((acc, p) => acc + Number(p.qty), 0);
       const totalCost = products.reduce((acc, p) => acc + (Number(p.qty) * Number(p.cost)), 0);
@@ -361,7 +352,7 @@
       lowStockBody.innerHTML = '';
 
       if (lowStockItems.length === 0) {
-        lowStockBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum item abaixo do estoque mínimo.</td></tr>`;
+        lowStockBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum item com estoque crítico.</td></tr>`;
         return;
       }
 
@@ -404,8 +395,8 @@
             <td class="p-3 font-semibold text-emerald-700">${formatMoney(p.retail || p.cost)}</td>
             <td class="p-3 text-gray-500">${p.location || '-'}</td>
             <td class="p-3 text-center space-x-2">
-              <button onclick="requestAuth(() => openModal('edit', '${p.id}'))" class="text-indigo-600 hover:text-indigo-900" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
-              <button onclick="requestAuth(() => deleteProduct('${p.id}'))" class="text-red-500 hover:text-red-700" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+              <button onclick="openModal('edit', '${p.id}')" class="text-indigo-600 hover:text-indigo-900" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700" title="Excluir"><i class="fa-solid fa-trash"></i></button>
             </td>
           </tr>
         `;
@@ -481,7 +472,7 @@
     }
 
     function deleteProduct(id) {
-      if (confirm(`Deseja remover este produto?`)) {
+      if (confirm(`Deseja realmente excluir este produto?`)) {
         products = products.filter(p => p.id !== id);
         saveData();
       }
@@ -491,8 +482,6 @@
       renderDashboard();
       renderProducts();
     }
-
-    renderAll();
   </script>
 </body>
 </html>
